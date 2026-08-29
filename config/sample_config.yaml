@@ -1,0 +1,16 @@
+# Drop this into experiments/queue/ to trigger ExperimentMind
+experiment_name: baseline_logistic_v1
+model_type: sklearn.LogisticRegression
+dataset_path: tests/data/iris.csv
+output_dir: experiments/outputs/baseline_logistic_v1
+primary_metric: val_accuracy
+executor: local        # local | kaggle
+
+hyperparams:
+  C: 1.0
+  max_iter: 200
+  solver: lbfgs
+
+logging:
+  log_file: training.log
+  metrics_format: json

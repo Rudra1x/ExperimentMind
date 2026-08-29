@@ -1,0 +1,26 @@
+required_fields:
+  - experiment_name
+  - model_type
+  - dataset_path
+  - output_dir
+  - primary_metric
+  - executor
+  - hyperparams
+
+valid_executors:
+  - local
+  - kaggle
+
+valid_metrics:
+  - val_accuracy
+  - accuracy
+  - val_loss
+  - loss
+  - f1
+  - val_f1
+  - precision
+  - recall
+  - mae
+  - mse
+  - rmse
+  - r2
