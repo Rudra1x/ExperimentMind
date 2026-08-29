@@ -1,0 +1,9 @@
+experiment_name: bad_path_test
+model_type: sklearn.SVC
+dataset_path: tests/data/nonexistent_file.csv
+output_dir: experiments/outputs/bad_path_test
+primary_metric: accuracy
+executor: local
+hyperparams:
+  C: 0.5
+  kernel: rbf

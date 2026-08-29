@@ -1,0 +1,10 @@
+ExperimentMind Validation Report
+========================================
+Config: config_bad_path.yaml
+Time: 2026-08-29T11:31:12.772590
+Status: FAILED
+
+Errors found (1):
+  1. Dataset not found: 'tests/data/nonexistent_file.csv'. Check the path is correct and the file exists.
+
+Fix these errors and re-submit the config.

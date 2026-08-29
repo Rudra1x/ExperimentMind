@@ -1,0 +1,8 @@
+experiment_name: broken_config
+model_type: sklearn.RandomForest
+# dataset_path missing intentionally
+output_dir: experiments/outputs/broken
+# primary_metric missing intentionally
+executor: local
+hyperparams:
+  n_estimators: 100

@@ -1,0 +1,11 @@
+ExperimentMind Validation Report
+========================================
+Config: config_missing_fields.yaml
+Time: 2026-08-29T11:30:06.794068
+Status: FAILED
+
+Errors found (2):
+  1. Missing required field: 'dataset_path'
+  2. Missing required field: 'primary_metric'
+
+Fix these errors and re-submit the config.
