@@ -1,0 +1,10 @@
+experiment_name: test_baseline_v1
+model_type: sklearn.LogisticRegression
+dataset_path: tests/data/iris.csv
+output_dir: experiments/outputs/test_baseline_v1
+primary_metric: val_accuracy
+executor: local
+hyperparams:
+  C: 1.0
+  max_iter: 200
+  solver: lbfgs

@@ -43,25 +43,56 @@ def create_validator_agent():
 def validate_config(config_path: str) -> dict:
     """
     Validate a single experiment config file.
-    Returns structured result with status, errors, and next path.
+    Deterministic pipeline — calls tools directly, no LLM orchestration.
+    LLM reasoning is reserved for agents that actually need it (Analyzer).
     """
     print(f"\n[Validator] Checking: {config_path}")
-    agent = create_validator_agent()
 
-    prompt = f"""
-    Validate this experiment config file: {config_path}
-    
-    Follow these steps in order:
-    1. Read the config file
-    2. Validate required fields
-    3. If fields are valid, check paths
-    4. Move to running (if valid) or failed (if invalid)
-    5. Report: PASSED or FAILED, with all errors listed
-    """
+    # Step 1: Read config
+    config = read_yaml_config(config_path)
+    if "error" in config:
+        errors = [config["error"]]
+        move_config_to_failed(config_path, errors)
+        print(f"[Validator] FAILED → {errors}")
+        return {"status": "failed", "errors": errors}
 
-    response = agent(prompt)
-    print(f"[Validator] Result: {response}")
-    return {"config_path": config_path, "response": str(response)}
+    print(f"  Tool #1: read_yaml_config ✓")
+
+    # Step 2: Validate required fields
+    field_result = validate_required_fields(config)
+    errors = field_result.get("errors", [])
+    print(f"  Tool #2: validate_required_fields ✓")
+
+    # Step 3: Check paths only if fields passed
+    if field_result.get("valid"):
+        path_result = check_paths(
+            config.get("dataset_path", ""),
+            config.get("output_dir", "")
+        )
+        print(f"  Tool #3: check_paths ✓")
+        if not path_result.get("paths_valid"):
+            errors.extend(path_result.get("errors", []))
+    else:
+        print(f"  Tool #3: check_paths SKIPPED (field errors found)")
+
+    # Step 4: Route based on result
+    if not errors:
+        move_result = move_config_to_running(
+            config_path,
+            config.get("experiment_name", "unknown")
+        )
+        print(f"  Tool #4: move_config_to_running ✓")
+        print(f"[Validator] PASSED → {move_result.get('new_path')}")
+        return {
+            "status":       "passed",
+            "config":       config,
+            "running_path": move_result.get("new_path")
+        }
+    else:
+        move_config_to_failed(config_path, errors)
+        print(f"  Tool #4: move_config_to_failed ✓")
+        print(f"[Validator] FAILED → {len(errors)} error(s): {errors}")
+        return {"status": "failed", "errors": errors}
 
 
 if __name__ == "__main__":
