@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExperimentMind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #080C14;
+  --s1:        #0D1420;
+  --s2:        #111B2E;
+  --border:    #1A2740;
+  --cyan:      #00D4FF;
+  --cyan-dim:  rgba(0, 212, 255, 0.08);
+  --cyan-glow: rgba(0, 212, 255, 0.15);
+  --mint:      #00E5A0;
+  --amber:     #FFB547;
+  --red:       #FF4D6D;
+  --purple:    #7C5CFC;
+  --text:      #E8EFF8;
+  --text2:     #6B849E;
+  --text3:     #3D5270;
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Inter', sans-serif;
+  --display:   'Space Grotesk', sans-serif;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; line-height: 1.5; }
+
+/* ── TOPBAR ─────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: var(--cyan);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #000;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 6px var(--mint);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.status-dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
+.stat-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  padding: 3px 8px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.stat-chip span { color: var(--text); font-weight: 600; }
+.refresh-btn {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--text2);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 0;
+  min-height: calc(100vh - 52px);
+}
+.main { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.rail { padding: 24px 24px 24px 0; display: flex; flex-direction: column; gap: 20px; }
+
+/* ── PANELS ─────────────────────────────────────────── */
+.panel {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-title {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.panel-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+.panel-body { padding: 18px; }
+
+/* ── EXPERIMENT SELECTOR ────────────────────────────── */
+.exp-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exp-selector select {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.exp-selector select:focus { border-color: var(--cyan); }
+
+/* ── LEADERBOARD ────────────────────────────────────── */
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.leaderboard-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text3);
+  text-align: left;
+  padding: 0 12px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.leaderboard-table th:last-child { text-align: right; }
+.leaderboard-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(26,39,64,0.5);
+  vertical-align: middle;
+}
+.leaderboard-table tr:last-child td { border-bottom: none; }
+
+/* The signature element — best run row */
+.leaderboard-table tr.best-row {
+  background: var(--cyan-dim);
+  position: relative;
+}
+.leaderboard-table tr.best-row td:first-child {
+  border-left: 2px solid var(--cyan);
+  padding-left: 10px;
+  box-shadow: inset 4px 0 12px var(--cyan-glow);
+}
+
+.rank-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  min-width: 24px;
+  display: inline-block;
+}
+.rank-badge.first { color: var(--cyan); }
+
+.run-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.run-id.best { color: var(--cyan); }
+
+.metric-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+.metric-val.best { color: var(--cyan); }
+
+.delta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  text-align: right;
+}
+.delta.zero { color: var(--cyan); }
+
+.trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.trend-badge.improving { background: rgba(0,229,160,0.1); color: var(--mint); }
+.trend-badge.declining { background: rgba(255,77,109,0.1); color: var(--red); }
+.trend-badge.stable    { background: rgba(107,132,158,0.1); color: var(--text2); }
+
+/* ── SUMMARY STATS ──────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.stat-block {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-bottom: 4px;
+}
+.stat-value {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
+}
+.stat-value.highlight { color: var(--cyan); }
+.stat-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+/* ── DIGEST PANEL ───────────────────────────────────── */
+.digest-content {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.digest-content::-webkit-scrollbar { width: 4px; }
+.digest-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── CONFIG SUBMIT ──────────────────────────────────── */
+.config-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.config-textarea:focus { border-color: var(--cyan); }
+.config-textarea::placeholder { color: var(--text3); }
+
+.submit-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: var(--cyan);
+  color: #000;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.submit-btn:hover { opacity: 0.88; }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── ATTENTION QUEUE ────────────────────────────────── */
+.attention-item {
+  padding: 12px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.attention-item:last-child { margin-bottom: 0; }
+.attention-item.new-best { border-color: rgba(0,212,255,0.3); }
+.attention-item.config-error { border-color: rgba(255,77,109,0.3); }
+.attention-item.regression { border-color: rgba(255,181,71,0.3); }
+
+.attention-type {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.attention-type.new-best { color: var(--cyan); }
+.attention-type.config-error { color: var(--red); }
+.attention-type.regression { color: var(--amber); }
+.attention-type.job-failure { color: var(--red); }
+
+.attention-title {
+  font-family: var(--display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.attention-desc {
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+.attention-actions { display: flex; gap: 6px; }
+.btn-approve {
+  flex: 1;
+  padding: 5px;
+  background: rgba(0,229,160,0.1);
+  border: 1px solid rgba(0,229,160,0.3);
+  color: var(--mint);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-approve:hover { background: rgba(0,229,160,0.18); }
+.btn-reject {
+  flex: 1;
+  padding: 5px;
+  background: rgba(255,77,109,0.08);
+  border: 1px solid rgba(255,77,109,0.25);
+  color: var(--red);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-reject:hover { background: rgba(255,77,109,0.15); }
+
+/* ── STATUS PANEL ───────────────────────────────────── */
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.status-item {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.status-count {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.status-count.queue   { color: var(--amber); }
+.status-count.running { color: var(--cyan); }
+.status-count.done    { color: var(--mint); }
+.status-count.failed  { color: var(--red); }
+.status-label {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+/* ── EMPTY / LOADING STATES ─────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--text3);
+  font-size: 12px;
+}
+.loading {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 10px 16px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text);
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: rgba(0,229,160,0.4); }
+.toast.error   { border-color: rgba(255,77,109,0.4); }
+
+/* ── SCROLLBAR ──────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">EM</div>
+    ExperimentMind
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill">
+      <div class="status-dot" id="conn-dot"></div>
+      <span id="conn-label">connecting...</span>
+    </div>
+    <div class="stat-chip">queue <span id="top-queue">—</span></div>
+    <div class="stat-chip">running <span id="top-running">—</span></div>
+    <div class="stat-chip">done <span id="top-done">—</span></div>
+    <button class="refresh-btn" onclick="refreshAll()">↺ Refresh</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- MAIN COLUMN -->
+  <div class="main">
+
+    <!-- LEADERBOARD PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Leaderboard</div>
+        <div class="exp-selector">
+          <div class="panel-meta">experiment</div>
+          <select id="exp-select" onchange="loadLeaderboard()">
+            <option value="iris_classifier">iris_classifier</option>
+            <option value="test_baseline_v1">test_baseline_v1</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="stats-row" id="summary-stats">
+          <div class="stat-block">
+            <div class="stat-label">total runs</div>
+            <div class="stat-value" id="s-total">—</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-label">best score</div>
+            <div class="stat-value highlight" id="s-best">—</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-label">baseline</div>
+            <div class="stat-value" id="s-baseline">—</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-label">improvement</div>
+            <div class="stat-value highlight" id="s-improvement">—</div>
+            <div class="stat-sub" id="s-trend"></div>
+          </div>
+        </div>
+        <div id="leaderboard-wrap">
+          <div class="loading">Loading leaderboard...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAILY DIGEST PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Daily Digest</div>
+        <div class="panel-meta" id="digest-date">—</div>
+      </div>
+      <div class="panel-body">
+        <div class="digest-content" id="digest-content">
+          <div class="loading">Loading digest...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMIT CONFIG PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Submit Experiment</div>
+        <div class="panel-meta">drops config into pipeline</div>
+      </div>
+      <div class="panel-body">
+        <textarea
+          class="config-textarea"
+          id="config-input"
+          placeholder="experiment_name: my_experiment
+model_type: sklearn.LogisticRegression
+dataset_path: tests/data/iris.csv
+output_dir: experiments/outputs/my_experiment
+primary_metric: val_accuracy
+executor: local
+hyperparams:
+  C: 1.0
+  max_iter: 200"></textarea>
+        <button class="submit-btn" id="submit-btn" onclick="submitConfig()">
+          Run Experiment
+        </button>
+        <div id="submit-status" style="margin-top:8px; font-family:var(--mono); font-size:11px; color:var(--text3);"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT RAIL -->
+  <div class="rail">
+
+    <!-- SYSTEM STATUS PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">System Status</div>
+        <div class="panel-meta" id="last-updated">—</div>
+      </div>
+      <div class="panel-body">
+        <div class="status-grid">
+          <div class="status-item">
+            <div class="status-count queue" id="r-queue">—</div>
+            <div class="status-label">queued</div>
+          </div>
+          <div class="status-item">
+            <div class="status-count running" id="r-running">—</div>
+            <div class="status-label">running</div>
+          </div>
+          <div class="status-item">
+            <div class="status-count done" id="r-done">—</div>
+            <div class="status-label">completed</div>
+          </div>
+          <div class="status-item">
+            <div class="status-count failed" id="r-failed">—</div>
+            <div class="status-label">failed</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTENTION QUEUE PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Needs Attention</div>
+        <div class="panel-meta" id="attention-count">—</div>
+      </div>
+      <div class="panel-body" id="attention-body">
+        <div class="loading">Loading...</div>
+      </div>
+    </div>
+
+    <!-- TRIGGER DIGEST PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Actions</div>
+      </div>
+      <div class="panel-body">
+        <button class="submit-btn" onclick="triggerDigest()" style="background:var(--s2); color:var(--text); border:1px solid var(--border);">
+          Generate Digest Now
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:8000';
+
+// ── UTILITIES ───────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function fmt(val) {
+  if (val === null || val === undefined) return '—';
+  if (typeof val === 'number') return val.toFixed(4);
+  return val;
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '—';
+  const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+  if (diff < 60)  return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  return `${Math.floor(diff/3600)}h ago`;
+}
+
+// ── STATUS ──────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const r = await fetch(`${API}/status`);
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+
+    document.getElementById('conn-dot').className   = 'status-dot';
+    document.getElementById('conn-label').textContent = 'online';
+    document.getElementById('top-queue').textContent   = d.queue_count;
+    document.getElementById('top-running').textContent = d.running_count;
+    document.getElementById('top-done').textContent    = d.completed_count;
+    document.getElementById('r-queue').textContent     = d.queue_count;
+    document.getElementById('r-running').textContent   = d.running_count;
+    document.getElementById('r-done').textContent      = d.completed_count;
+    document.getElementById('r-failed').textContent    = d.failed_count;
+    document.getElementById('last-updated').textContent = timeAgo(d.timestamp);
+  } catch {
+    document.getElementById('conn-dot').className    = 'status-dot offline';
+    document.getElementById('conn-label').textContent = 'offline — start API server';
+  }
+}
+
+// ── LEADERBOARD ─────────────────────────────────────────────
+async function loadLeaderboard() {
+  const exp = document.getElementById('exp-select').value;
+  const wrap = document.getElementById('leaderboard-wrap');
+  wrap.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const r = await fetch(`${API}/leaderboard/${exp}`);
+    if (!r.ok) {
+      wrap.innerHTML = '<div class="empty">No runs found for this experiment.</div>';
+      return;
+    }
+    const d = await r.json();
+
+    const lb = d.leaderboard;
+    const sm = d.summary;
+    const pm = d.primary_metric;
+
+    // Summary stats
+    document.getElementById('s-total').textContent =
+      sm.success ? sm.total_runs : '—';
+    document.getElementById('s-best').textContent =
+      sm.success ? sm.best_value : '—';
+    document.getElementById('s-baseline').textContent =
+      sm.success ? sm.baseline_value : '—';
+    document.getElementById('s-improvement').textContent =
+      sm.success ? `+${sm.improvement_pct}%` : '—';
+
+    if (lb.success) {
+      const trend = lb.leaderboard.length > 1 ? 'improving' : 'stable';
+      document.getElementById('s-trend').textContent = trend;
+    }
+
+    // Table
+    if (!lb.success || !lb.leaderboard || lb.leaderboard.length === 0) {
+      wrap.innerHTML = '<div class="empty">No ranked runs yet.</div>';
+      return;
+    }
+
+    const rows = lb.leaderboard.map((entry, i) => {
+      const isBest   = entry.is_best;
+      const rowClass = isBest ? 'best-row' : '';
+      const badge    = isBest
+        ? `<span class="rank-badge first">01</span>`
+        : `<span class="rank-badge">0${entry.rank}</span>`;
+      const runCell  = isBest
+        ? `<span class="run-id best">${entry.run_id}</span>`
+        : `<span class="run-id">${entry.run_id}</span>`;
+      const metCell  = isBest
+        ? `<span class="metric-val best">${entry.metric_value}</span>`
+        : `<span class="metric-val">${entry.metric_value}</span>`;
+      const deltaClass = entry.delta_vs_best === 0 ? 'delta zero' : 'delta';
+      const deltaStr   = entry.delta_vs_best === 0
+        ? 'best'
+        : `${entry.delta_vs_best > 0 ? '+' : ''}${entry.delta_vs_best.toFixed(4)}`;
+
+      return `<tr class="${rowClass}">
+        <td>${badge}</td>
+        <td>${runCell}</td>
+        <td>${metCell}</td>
+        <td><span class="${deltaClass}">${deltaStr}</span></td>
+      </tr>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <table class="leaderboard-table">
+        <thead><tr>
+          <th>rank</th>
+          <th>${pm}</th>
+          <th style="text-align:right">score</th>
+          <th style="text-align:right">delta</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  } catch (e) {
+    wrap.innerHTML = '<div class="empty">Could not load leaderboard.</div>';
+  }
+}
+
+// ── DIGEST ──────────────────────────────────────────────────
+async function loadDigest() {
+  try {
+    const r = await fetch(`${API}/digest/latest`);
+    if (!r.ok) {
+      document.getElementById('digest-content').textContent =
+        'No digest generated yet. Run an experiment to generate one.';
+      return;
+    }
+    const d = await r.json();
+    document.getElementById('digest-date').textContent    = d.date || '—';
+    document.getElementById('digest-content').textContent = d.content || '—';
+  } catch {
+    document.getElementById('digest-content').textContent =
+      'Could not load digest — is the API server running?';
+  }
+}
+
+// ── ATTENTION ───────────────────────────────────────────────
+async function loadAttention() {
+  const body = document.getElementById('attention-body');
+  try {
+    const r = await fetch(`${API}/attention`);
+    const d = await r.json();
+    document.getElementById('attention-count').textContent =
+      d.count > 0 ? `${d.count} pending` : 'all clear';
+
+    if (d.count === 0) {
+      body.innerHTML =
+        '<div class="empty">Nothing needs your attention right now.</div>';
+      return;
+    }
+
+    body.innerHTML = d.items.map(item => {
+      const typeClass = item.type.replace(/_/g, '-');
+      const label = {
+        'new_best_model': 'New best model',
+        'config_error':   'Config error',
+        'regression':     'Regression',
+        'job_failure':    'Job failed'
+      }[item.type] || item.type;
+
+      return `<div class="attention-item ${typeClass}">
+        <div class="attention-type ${typeClass}">${label}</div>
+        <div class="attention-title">${item.title}</div>
+        <div class="attention-desc">${item.description}</div>
+        <div class="attention-actions">
+          <button class="btn-approve" onclick="resolveItem(${item.id}, 'approve')">
+            Approve
+          </button>
+          <button class="btn-reject" onclick="resolveItem(${item.id}, 'reject')">
+            Dismiss
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch {
+    body.innerHTML = '<div class="empty">Could not load attention queue.</div>';
+  }
+}
+
+async function resolveItem(id, action) {
+  try {
+    const r = await fetch(`${API}/attention/${id}/resolve`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action})
+    });
+    if (r.ok) {
+      showToast(`Item ${action === 'approve' ? 'approved' : 'dismissed'}`);
+      loadAttention();
+    }
+  } catch {
+    showToast('Failed to resolve item', 'error');
+  }
+}
+
+// ── SUBMIT CONFIG ────────────────────────────────────────────
+async function submitConfig() {
+  const yaml = document.getElementById('config-input').value.trim();
+  if (!yaml) { showToast('Paste a YAML config first', 'error'); return; }
+
+  const btn    = document.getElementById('submit-btn');
+  const status = document.getElementById('submit-status');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    const r = await fetch(`${API}/experiments`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({yaml_content: yaml})
+    });
+    const d = await r.json();
+    if (r.ok && d.success) {
+      showToast(`Pipeline started: ${d.experiment_name}`);
+      status.textContent = `✓ run_id: ${d.run_id}`;
+      document.getElementById('config-input').value = '';
+      setTimeout(refreshAll, 3000);
+    } else {
+      showToast(d.detail || 'Submission failed', 'error');
+      status.textContent = '✗ Submission failed';
+    }
+  } catch {
+    showToast('API unreachable', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Run Experiment';
+  }
+}
+
+// ── TRIGGER DIGEST ───────────────────────────────────────────
+async function triggerDigest() {
+  const exp = document.getElementById('exp-select').value;
+  try {
+    const r = await fetch(`${API}/digest/generate/${exp}`, {method: 'POST'});
+    if (r.ok) {
+      showToast('Digest generation started...');
+      setTimeout(loadDigest, 8000);
+    }
+  } catch {
+    showToast('Could not trigger digest', 'error');
+  }
+}
+
+// ── REFRESH ALL ──────────────────────────────────────────────
+async function refreshAll() {
+  await Promise.all([
+    loadStatus(),
+    loadLeaderboard(),
+    loadDigest(),
+    loadAttention()
+  ]);
+}
+
+// ── INIT + AUTO-REFRESH ──────────────────────────────────────
+refreshAll();
+setInterval(refreshAll, 15000);
+</script>
+</body>
+</html>

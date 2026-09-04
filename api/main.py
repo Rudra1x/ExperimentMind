@@ -17,6 +17,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 from typing import Optional
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from db.schema import (
     init_db, get_session,
@@ -58,6 +60,12 @@ app.add_middleware(
     allow_headers  = ["*"],
 )
 
+# Add after middleware
+app.mount("/dashboard", StaticFiles(directory="dashboard"), name="dashboard")
+
+@app.get("/ui")
+def serve_dashboard():
+    return FileResponse("dashboard/index.html")
 
 # ── MODELS ───────────────────────────────────────────────────
 
